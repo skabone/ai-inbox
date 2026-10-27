@@ -166,7 +166,16 @@
     return senderLabel(addr).replace(/\b(billing|bills?|payments?|customer service|no-?reply|notifications?|team|accounts?)\b/gi, '').replace(/[-–|:,]+$/, '').trim() || senderLabel(addr);
   }
 
-  // Classify one thread. ctx: {me: his address, now: ms, labels: {todo, done, removed} label ids}.
+  // The lists he can choose in Edit; "fyi" also covers topic mail.
+  const EDIT_LISTS = ['todo', 'needsReply', 'waitingOn', 'fyi'];
+  // His category for a thread: the label AI Inbox set last (kept in his edits) while the thread still carries it, else the first category label on it.
+  function pickCategory(all, edit, categories) {
+    const list = categories || [];
+    const set = edit && edit.category && all.has(edit.category) && list.find(c => c.id === edit.category);
+    return set || list.find(c => all.has(c.id)) || null;
+  }
+
+  // Classify one thread. ctx: {me: his address, now: ms, labels: {todo, done, removed, pinned} label ids, edits: {threadId: his edit}, categories: [{id, name}]}.
   function classify(thread, ctx) {
     const me = ctx.me || '';
     const now = ctx.now || Date.now();
@@ -237,7 +246,7 @@
         action = `Reply to ${name}: ${subj}`;
         needsReply = true;
         reasons.push('A person wrote to you directly with a question.');
-      } else if (all.has('STARRED')) {
+      } else if (all.has('STARRED') && all.has('INBOX')) {
         list = 'todo';
         action = `Follow up: ${subj}`;
         reasons.push('You starred this thread.');
@@ -259,16 +268,42 @@
       reasons.unshift('You removed this from your to-dos.');
     }
     if (!action) action = subj;
+    // His choices beat the rules: a category label he chose, then his edits (title, due date, list, note) until he resets them.
+    const auto = { action, due: list === 'todo' || list === 'needsReply' ? due : null, list: list === 'topic' ? 'fyi' : list };
+    const edit = (ctx.edits || {})[thread.id] || null;
+    const category = pickCategory(all, edit, ctx.categories);
+    let shownDue = auto.due;
+    if (category) {
+      if (list === 'fyi') list = 'topic';
+      reasons.unshift(`You put this in ${category.name}.`);
+    }
+    const edited = !!edit && ['title', 'due', 'list', 'note'].some(k => edit[k] != null);
+    if (edited) {
+      if (EDIT_LISTS.includes(edit.list)) {
+        needsReply = edit.list === 'needsReply' || (edit.list === 'todo' && needsReply);
+        list = edit.list === 'fyi' ? (category || topic !== 'Other' ? 'topic' : 'fyi') : edit.list;
+      }
+      if (edit.title) action = edit.title;
+      if (edit.due != null) shownDue = edit.due || null;
+      reasons.unshift('You edited this item; your changes beat the rules until you reset them.');
+    }
     return {
       id: thread.id,
       list,
       action,
-      due: list === 'todo' || list === 'needsReply' ? due : null,
-      topic,
+      due: shownDue,
+      topic: category ? category.name : topic,
+      ruleTopic: topic,
+      category: category ? { id: category.id, name: category.name } : null,
+      edited,
+      titleEdited: edited && !!edit.title,
+      note: edited && edit.note ? edit.note : '',
+      auto,
       needsReply,
       done,
       removed,
       todoLabel,
+      pinned: !!labels.pinned && all.has(labels.pinned),
       inInbox: all.has('INBOX'),
       unread: all.has('UNREAD'),
       important: all.has('IMPORTANT'),
@@ -308,15 +343,18 @@
   }
   function sortThreads(threads, ctx) { return threads.map(t => classify(t, ctx)).sort(compareItems); }
 
-  // Topic cards: open topic mail in the inbox, grouped in fixed order, each with a count and its newest line.
-  function groupTopics(items) {
+  // Topic cards: open topic mail in the inbox, grouped in fixed order, then his categories, each with a count and its newest line.
+  // key is the topic name, or "cat:<label id>" for a category.
+  function groupTopics(items, categories) {
     const groups = [];
-    for (const topic of TOPICS) {
-      const members = items.filter(i => i.list === 'topic' && i.topic === topic && !i.done && i.inInbox).sort((a, b) => b.date - a.date);
-      if (members.length) groups.push({ topic, count: members.length, unread: members.filter(m => m.unread).length, latest: members[0], items: members });
-    }
+    const add = (topic, key, test) => {
+      const members = items.filter(i => i.list === 'topic' && !i.done && i.inInbox && test(i)).sort((a, b) => b.date - a.date);
+      if (members.length) groups.push({ topic, key, count: members.length, unread: members.filter(m => m.unread).length, latest: members[0], items: members });
+    };
+    for (const topic of TOPICS) add(topic, topic, i => !i.category && i.topic === topic);
+    for (const c of categories || []) add(c.name, `cat:${c.id}`, i => !!i.category && i.category.id === c.id);
     return groups;
   }
 
-  return { LISTS, TOPICS, WAITING_DAYS, classify, sortThreads, groupTopics, needsBody, compareItems, findDue, resolveDate, localDay, shortSubject, callName, senderLabel, initials, isPersonMessage, markHolds };
+  return { LISTS, TOPICS, EDIT_LISTS, WAITING_DAYS, pickCategory, classify, sortThreads, groupTopics, needsBody, compareItems, findDue, resolveDate, localDay, shortSubject, callName, senderLabel, initials, isPersonMessage, markHolds };
 });

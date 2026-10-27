@@ -9,6 +9,9 @@
   const H = 3600000;
   const DONE = 'AI Inbox/Done';
   const TODO = 'AI Inbox/To-do';
+  const PINNED = 'AI Inbox/Pinned';
+  // Invented user labels: one of his own Gmail labels and one category AI Inbox made.
+  const LABELS = [{ id: 'Label_demo_family', name: 'Family', type: 'user' }, { id: 'Label_demo_reading', name: 'AI Inbox/Reading', type: 'user' }];
 
   // Each thread: [id, messages]; each message: [hoursAgo, from, to, subject, snippet, labels, extra]
   const SPEC = [
@@ -19,18 +22,19 @@
     ['demo-05', [[20, ['Sam Rivera', 'sam@neighbors.demo'], [ME], 'Borrowing the ladder', 'Do you still need the ladder this weekend?', ['INBOX']], [8, ME, [['Sam Rivera', 'sam@neighbors.demo']], 'Re: Borrowing the ladder', 'Yes please, Saturday morning works.', ['SENT']]]],
     ['demo-06', [[30, ['PSE Billing', 'billing@pse.demo'], [ME], 'Your energy bill is ready', 'Your sample bill of $84.12 is due Nov 3. Pay online or by phone. Invented demo bill.', ['INBOX', 'UNREAD'], { listUnsubscribe: true }]]],
     ['demo-07', [[26, ['Dr. Anna Lee', 'anna.lee@clinic.demo'], [ME], 'Your appointment next week', 'Hi Mintay, please confirm your appointment on Tuesday at 2 PM, or reply if you need another time. Invented demo message.', ['INBOX', 'IMPORTANT']]]],
-    ['demo-08', [[14, ['Parcel Updates', 'no-reply@parcel.demo'], [ME], 'Your package is out for delivery', 'Your sample order is out for delivery and should arrive today.', ['INBOX', 'UNREAD']]]],
+    ['demo-08', [[14, ['Parcel Updates', 'no-reply@parcel.demo'], [ME], 'Your package is out for delivery', 'Your sample order is out for delivery and should arrive today.', ['INBOX', 'UNREAD', 'CATEGORY_UPDATES']]]],
     ['demo-09', [[52, ['Cedar Goods', 'orders@cedargoods.demo'], [ME], 'Receipt for your order #4821', 'Thanks for your purchase of a sample notebook set. Invented receipt.', ['INBOX']]]],
-    ['demo-10', [[72, ['Skyway Air', 'no-reply@skyway.demo'], [ME], 'Itinerary: Seattle to Portland', 'Your sample flight departs Friday at 8:15 AM. Confirmation code DEMO42.', ['INBOX']]]],
+    ['demo-10', [[72, ['Skyway Air', 'no-reply@skyway.demo'], [ME], 'Itinerary: Seattle to Portland', 'Your sample flight departs Friday at 8:15 AM. Confirmation code DEMO42.', ['INBOX', PINNED]]]],
     ['demo-11', [[40, ['Neighborhood Council', 'events@council.demo'], [ME], 'You are invited: fall potluck', 'Join the sample fall potluck at the park pavilion. Please RSVP by Friday.', ['INBOX', 'UNREAD']]]],
-    ['demo-12', [[60, ['Cedar Library', 'news@cedarlibrary.demo'], [ME], 'New arrivals this month', 'Browse the sample reading list for November.', ['INBOX'], { listUnsubscribe: true }]]],
+    ['demo-12', [[60, ['Cedar Library', 'news@cedarlibrary.demo'], [ME], 'New arrivals this month', 'Browse the sample reading list for November.', ['INBOX', 'Label_demo_reading'], { listUnsubscribe: true }]]],
     ['demo-13', [[90, ['Jordan Kim', 'jordan@studio.demo'], [ME], 'Slides for Thursday', 'Can you look over the sample slides before Thursday?', ['INBOX', DONE]]]],
     ['demo-14', [[120, ['Priya Shah', 'priya@studio.demo'], [ME], 'Room setup notes', 'Could you share the room setup notes?', ['INBOX', DONE]], [5, ['Priya Shah', 'priya@studio.demo'], [ME], 'Re: Room setup notes', 'One more thing: what time should the chairs be ready?', ['INBOX', 'UNREAD']]]],
-    ['demo-15', [[48, ['Alex Moreno', 'alex@friends.demo'], [ME], 'Photos from the hike', 'Here are the sample photos from the hike. No rush to look.', ['INBOX', 'STARRED']]]],
+    ['demo-15', [[48, ['Alex Moreno', 'alex@friends.demo'], [ME], 'Photos from the hike', 'Here are the sample photos from the hike. No rush to look.', ['INBOX', 'STARRED', 'Label_demo_family']]]],
     ['demo-16', [[18, ['Riley Tran', 'riley@studio.demo'], [['Team list', 'team@studio.demo']], 'Team update', 'Quick sample update for everyone. Any questions?', ['INBOX'], { cc: [ME] }]]],
     ['demo-18', [[34, ['Riverside College', 'no-reply@college.demo'], [ME], 'Winter quarter class schedule posted', 'The sample winter quarter schedule is now available in the student portal.', ['INBOX', 'UNREAD']]]],
-    ['demo-19', [[66, ['Evergreen Bank', 'statements@evergreen.demo'], [ME], 'Your October statement is ready', 'Your sample statement is ready. Autopay is on, so no action is needed.', ['INBOX'], { listUnsubscribe: true }]]],
-    ['demo-17', [[80, ['Hana Ito', 'hana@friends.demo'], [ME], 'Book recommendation', 'Thought you might like this invented novel.', ['INBOX', TODO]]]]
+    ['demo-19', [[66, ['Evergreen Bank', 'statements@evergreen.demo'], [ME], 'Your October statement is ready', 'Your sample statement is ready. Autopay is on, so no action is needed.', ['INBOX', 'CATEGORY_UPDATES'], { listUnsubscribe: true }]]],
+    ['demo-17', [[80, ['Hana Ito', 'hana@friends.demo'], [ME], 'Book recommendation', 'Thought you might like this invented novel.', ['INBOX', TODO]]]],
+    ['demo-20', [[24 * 45, ['Grandpa Joe', 'joe@family.demo'], [ME], 'The old cabin recipe', 'Here is the sample pancake recipe from the cabin, as promised.', ['STARRED', 'IMPORTANT']]]]
   ];
 
   const addr = a => Array.isArray(a) ? { name: a[0], email: a[1] } : a;
@@ -54,7 +58,7 @@
         body: null
       }))
     }));
-    return { me: ME.email, threads };
+    return { me: ME.email, threads, labels: LABELS.map(l => Object.assign({}, l)) };
   }
-  return { build, ME };
+  return { build, ME, LABELS };
 });
