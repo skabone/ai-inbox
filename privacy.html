@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
+<meta http-equiv="refresh" content="15; url=https://ai-inbox.mmisgano.workers.dev/privacy.html">
 <title>AI Inbox privacy</title>
-<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<main class="privacy-page">
 <h1>AI Inbox privacy</h1>
-<p>AI Inbox is a personal page that shows your own Gmail in your own browser. It has no server and no database.</p>
+<p>This page has moved to <a href="https://ai-inbox.mmisgano.workers.dev/privacy.html">https://ai-inbox.mmisgano.workers.dev/privacy.html</a>. The same text follows.</p>
+<p>AI Inbox is a personal page that shows your own Gmail in your own browser. Your mail never passes through a server and is kept in no database.</p>
+<h2>Staying signed in</h2>
+<p>A small sign-in helper on the owner's own Cloudflare account serves this page. It keeps Google's long-term sign-in key encrypted and hands the page a one-hour pass when it needs one, so each device stays signed in for 90 days. It accepts only the owner's Google account, never reads, sends or deletes mail, and stores no mail. "Sign out everywhere" in Settings ends every device's sign-in and removes the key from your Google account.</p>
 <h2>What it reads</h2>
 <p>After you sign in with Google, the page reads your inbox and sent mail (subjects, senders, dates, short previews, and a plain-text body only when a sorting rule needs it) straight from Google to your browser. Mail is kept in the page's memory and is gone when you close or reload it.</p>
 <h2>What it changes</h2>
@@ -19,7 +21,5 @@
 <p>Your edits to items (title, due date, list, note) and category settings are saved in one file in your Google Drive's hidden app-data area, which only this app can see. Your sign-off and one display setting are saved in this browser. Nothing is sent anywhere else: no analytics, no third parties, no AI service.</p>
 <h2>Removing access</h2>
 <p>Remove AI Inbox's access in your Google Account under Security, "Your connections to third-party apps" (myaccount.google.com/connections). To remove its hidden Drive file, open Google Drive, Settings, Manage apps, and choose "Delete hidden app data" for AI Inbox.</p>
-<p><a href="./">Back to AI Inbox</a></p>
-</main>
 </body>
 </html>
