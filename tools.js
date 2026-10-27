@@ -9,10 +9,10 @@
   // The one place a Gmail URL is built. API thread ids open in the #all/ fragment for that signed-in account.
   function threadLink(address, threadId) {
     if (!address || !threadId) return '';
-    return `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(address)}#all/${encodeURIComponent(threadId)}`;
+    return `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(address)}#all/${encodeURIComponent(threadId)}`;
   }
   function inboxLink(address) {
-    return address ? `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(address)}#inbox` : 'https://mail.google.com/mail/u/0/#inbox';
+    return address ? `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(address)}#inbox` : 'https://mail.google.com/mail/u/0/#inbox';
   }
 
   const TEMPLATES = [

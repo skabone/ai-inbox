@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-  const BUILD = '2026-10-26-V1.1';
+  const BUILD = '2026-10-26-V1.1.1';
   const VERSION = 'V1.1';
   const S = window.AIInboxSorter, T = window.AIInboxTools, G = window.AIInboxGmail;
   const SCOPE = 'https://www.googleapis.com/auth/gmail.modify';

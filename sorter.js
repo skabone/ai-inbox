@@ -17,6 +17,7 @@
 
   const ASK = /\b(?:can you|could you|would you|will you|are you|do you|did you|have you|let me know|please (?:let me know|reply|respond|advise|send|review|choose|decide)|what do you think|your thoughts|get back to me|when (?:are|can|would|will) you|any chance|which (?:one|option) (?:do|would) you)\b/;
   const CONFIRM = /\b(?:please confirm|confirm (?:your|the|that|whether|if|by|attendance)|can you confirm|reply to confirm|confirmation (?:is )?needed|are you (?:still )?coming|will you attend|let us know (?:if|whether|by)|accept or decline|keep (?:the|your) (?:reservation|hold|booking))\b/;
+  const REACTION = /\breacted (?:to your (?:message|email)|with)\b/;
   const RSVP = /\b(?:rsvp|r\.s\.v\.p|you(?:'re| are) invited|invitation to)\b/;
   const APPOINTMENT = /\b(?:appointment|appt|check-?up|dentist|dental|clinic|doctor|consultation|your visit|cleaning|physical exam|reschedul\w*)\b|\bdr\.\s/;
   const MONEY = /\$\s?\d|\bamount due\b|\bbalance due\b|\bpayment (?:is )?due\b|\bminimum payment\b/;
@@ -103,6 +104,13 @@
 
   const emailOf = a => lower(a && a.email).trim();
   function isMe(addr, me) { return !!me && emailOf(addr) === lower(me); }
+  // A relay or tracking address (his own address encoded with "=", or a long random local part) is not someone to wait on.
+  function isMachineAddress(addr, me) {
+    const local = emailOf(addr).split('@')[0];
+    if (!local || MACHINE_LOCAL.test(local) || local.includes('=')) return true;
+    if (me && local.includes(lower(me).split('@')[0])) return true;
+    return local.length >= 24 && /\d/.test(local) && /^[a-z0-9._-]+$/.test(local);
+  }
   function isPersonMessage(msg) {
     const local = emailOf(msg.from).split('@')[0];
     if (!local || MACHINE_LOCAL.test(local)) return false;
@@ -192,7 +200,7 @@
     let needsReply = false;
 
     if (fromMeLast) {
-      const recipients = [...(latest.to || []), ...(latest.cc || [])].filter(a => !isMe(a, me));
+      const recipients = [...(latest.to || []), ...(latest.cc || [])].filter(a => !isMe(a, me) && !isMachineAddress(a, me));
       if (recipients.length && now - latest.date >= WAITING_DAYS * DAY) {
         list = 'waitingOn';
         action = `Follow up with ${callName(recipients[0])}: ${subj}`;
@@ -200,6 +208,8 @@
       } else {
         reasons.push('You sent the last message recently.');
       }
+    } else if (lastOther && REACTION.test(lower(lastOther.snippet || ''))) {
+      reasons.push('A reaction to your message, nothing to do.');
     } else if (lastOther) {
       const bill = (MONEY.test(t) || (BILL_WORD.test(t) && due)) && !PAID.test(t) && (due || /\b(?:due|pay|overdue|past due)\b/.test(t));
       const replyAsk = person && direct && (asks || confirm);
